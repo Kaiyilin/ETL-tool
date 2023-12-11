@@ -1,0 +1,1 @@
+I just want to practice my OOP design for ETL
