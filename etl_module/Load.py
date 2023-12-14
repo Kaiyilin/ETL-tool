@@ -19,61 +19,116 @@ config might looks like this
 from datetime import datetime
 import logging
 class Load:
-    def __init__(self, config) -> None:
-        # Validate required fields
-        required_fields = {"provider", "destination_type", "load_destination", "path_prefix", "pipeline_name"}
-        if not all(key in config for key in required_fields):
-            raise ValueError("Missing required configuration parameters: " + ", ".join(required_fields))
+    def __init__(self, config):
+        """
+        Initialize the Load object with configuration parameters.
+
+        Args:
+            config (dict): The configuration dictionary containing required fields.
+
+        Raises:
+            ValueError: If any required configuration field is missing.
+        """
+        required_fields = ["provider", "destination_type", "load_destination", "path_prefix", "pipeline_name"]
+        for field in required_fields:
+            if field not in config:
+                raise ValueError(f"Missing required configuration field: {field}")
 
         self.provider = config["provider"]
-        self.destination_type = config["destination_type"]
         self.load_destination = config["load_destination"]
+        self.destination_type = config["destination_type"]
         self.path_prefix = config["path_prefix"]
         self.pipeline_name = config["pipeline_name"]
-        self.creds_config = config.get("creds_config", {})
+        self._creds_config = config.get("creds_config", {})
 
-        self._get_creds()
+        # Initialize logging
+        self.logger = logging.getLogger(f"load_pipeline.{self.pipeline_name}")
 
     def _get_creds(self):
-        # Implement logic to retrieve credentials based on provider
-        # ... (e.g., using boto3 for AWS, gcloud for GCP)
+        """
+        Retrieve credentials based on the provider.
 
-        # Update self.creds with the retrieved credentials
-        # ...
-        pass
+        Raises:
+            NotImplementedError: If the provider is not supported.
+        """
+        if self.provider == "aws":
+            # Implement logic to access AWS credentials from KMS
+            # ...
+            # Update with your specific implementation
+            # return retrieved credentials
+            return {}
+        elif self.provider == "gcp":
+            # Implement logic to access GCP credentials from Secret Manager
+            # ...
+            # Update with your specific implementation
+            # return retrieved credentials
+            return {}
+        else:
+            raise NotImplementedError(f"Provider {self.provider} not supported.")
 
-    def load(self):
-        logger = logging.getLogger("load_pipeline")
-        progress_counter = 0
+    def get_target_path(self):
+        """
+        Construct the target path based on the current date and path prefix.
 
-        try:
-            # Prepare data source using credentials
-            data_source = self._prepare_data_source()
-
-            # Get target path
-            target_path = self._get_target_path()
-
-            # Write data to target path
-            self._write_data(data_source, target_path)
-
-            logger.info(f"Successfully loaded {progress_counter} records to {target_path}")
-        except Exception as e:
-            logger.error(f"Error loading data: {e}")
-            raise e
-
-    def _prepare_data_source(self):
-        # Implement logic to access data source based on provider and credentials
-        # ...
-
-        # Return the data source object or iterator
-        pass
-
-    def _get_target_path(self):
+        Returns:
+            str: The target path for data loading.
+        """
         return f"{self.load_destination}/{datetime.now().strftime(self.path_prefix)}"
 
-    def _write_data(self, data_source, target_path):
-        # Implement logic to write data to the target path based on the data source
-        # ...
+    def prepare_data_source(self):
+        """
+        Access and prepare data from the source using the retrieved credentials.
 
-        # Raise an exception if writing fails
-        pass
+        Raises:
+            Exception: Any errors encountered while accessing the data source.
+
+        Returns:
+            object: The prepared data object specific to your data source.
+        """
+        # Implement logic to access and prepare data based on provider and credentials
+        # ...
+        # Update with your specific data source and processing steps
+        # raise exceptions if needed
+        # return the prepared data object
+
+    def write_data(self, data, target_path):
+        """
+        Write the prepared data to the specified target path.
+
+        Args:
+            data: The data object to be written.
+            target_path (str): The path to write the data to.
+
+        Raises:
+            Exception: Any errors encountered while writing data.
+        """
+        # Implement logic to write data to the target path using the data object
+        # ...
+        # Update with your specific data writing method and error handling
+        # raise exceptions if needed
+
+    def load(self):
+        try:
+            # Get credentials
+            credentials = self._get_creds()
+
+            # Prepare data source
+            data_source = self.prepare_data_source()
+
+            # Get target path
+            target_path = self.get_target_path()
+
+            # Track progress (optional)
+            progress_counter = 0
+
+            # Write data in batches or loop through records (depending on your data source)
+            for record in data_source:
+                self.write_data(record, target_path)
+                progress_counter += 1
+                self.logger.info(f"Processed record {progress_counter}")
+
+            self.logger.info(f"Successfully loaded {progress_counter} records to {target_path}")
+        except Exception as e:
+            self.logger.error(f"Error loading data: {e}")
+
+        # Handle any additional cleanup or resource release
