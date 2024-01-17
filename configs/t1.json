@@ -1,0 +1,16 @@
+{
+    "extract": {
+        "conn_str" : "http://localhost",
+        "user_name" : "test",
+        "password" : "test",
+        "db" : "mysql",
+        "port" : 8888
+    },
+    "transform" : {
+
+    },
+    "load" : {
+        
+    }
+
+}
