@@ -7,6 +7,7 @@
         "port" : 8888
     },
     "transform" : {
+        "column1" : "encryption"
 
     },
     "load" : {
